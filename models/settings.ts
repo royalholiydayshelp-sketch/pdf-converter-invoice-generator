@@ -1,0 +1,58 @@
+import { z } from "zod";
+
+export const settingsSchema = z.object({
+  id: z.literal("singleton"),
+  companyName: z.string().min(1),
+  customerName: z.string(),
+  customerAddress: z.string(),
+  customerPhone: z.string(),
+  customerEmail: z.string(),
+  logoBase64: z.string(),
+  address: z.string(),
+  phone: z.string(),
+  email: z.string(),
+  gstVat: z.string(),
+  footer: z.string(),
+  watermarkBase64: z.string(),
+  primaryColor: z.string(),
+  currency: z.string(),
+  signatureBase64: z.string(),
+  invoicePrefix: z.string(),
+  invoiceCounter: z.number(),
+  taxPercent: z.number(),
+  dateFormat: z.string(),
+  theme: z.enum(["light", "dark", "system"]),
+  orientation: z.enum(["portrait", "landscape"]),
+  preparedBy: z.string(),
+  showWatermark: z.boolean(),
+});
+
+export type AppSettings = z.infer<typeof settingsSchema>;
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  id: "singleton",
+  companyName: "AADHIL MANAF ROYAL HOLIDAYS LLP",
+  customerName: "Valued Customer",
+  customerAddress: "",
+  customerPhone: "",
+  customerEmail: "",
+  logoBase64: "",
+  address:
+    "Pallath Square, Kanayannur, 5/257 A8, S.No.397B, Kalamassery, Ernakulam - 683104, Kerala",
+  phone: "+91 94977 50317 | +971 50 611 6742",
+  email: "royalholiydayshelp@gmail.com",
+  gstVat: "",
+  footer: "Royal Holidays — Luxury travel · Kerala & Gulf. Thank you for your business.",
+  watermarkBase64: "",
+  primaryColor: "#98846c",
+  currency: "INR",
+  signatureBase64: "",
+  invoicePrefix: "RH",
+  invoiceCounter: 0,
+  taxPercent: 0,
+  dateFormat: "dd/MM/yyyy",
+  theme: "system",
+  orientation: "portrait",
+  preparedBy: "Adhil Manaf",
+  showWatermark: false,
+};
