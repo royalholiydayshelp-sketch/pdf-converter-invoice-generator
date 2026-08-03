@@ -123,7 +123,7 @@ export function TransactionsTable() {
         header: "Status",
         cell: ({ row }) =>
           row.original.invoiceGenerated ? (
-            <Badge variant="secondary">Invoiced</Badge>
+            <Badge variant="secondary">Statement generated</Badge>
           ) : (
             <Badge variant="outline">Pending</Badge>
           ),

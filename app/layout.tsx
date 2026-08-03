@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Statement Invoice — Bank to PDF",
   description:
-    "Offline bank statement to invoice generator. Upload CSV, manage transactions, generate PDF invoices.",
+    "Offline bank statement PDF generator. Upload CSV, manage transactions, generate PDF statements.",
 };
 
 export default function RootLayout({

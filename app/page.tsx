@@ -29,7 +29,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Overview of your bank transactions and invoices
+            Overview of your bank transactions and statements
           </p>
         </div>
         <div className="flex gap-2">

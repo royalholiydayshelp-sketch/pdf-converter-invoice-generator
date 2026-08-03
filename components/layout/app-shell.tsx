@@ -18,7 +18,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/upload", label: "Upload", icon: Upload },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/invoices", label: "Invoices", icon: FileText },
+  { href: "/statements", label: "Statements", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden w-64 flex-col border-r bg-card p-4 md:flex">
         <div className="mb-8 px-2">
           <h1 className="text-lg font-bold tracking-tight">Statement Invoice</h1>
-          <p className="text-xs text-muted-foreground">Bank to PDF invoices</p>
+          <p className="text-xs text-muted-foreground">Bank to PDF statements</p>
         </div>
         <NavLinks />
         <div className="mt-auto pt-4">
@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="font-semibold">Statement Invoice</span>
           </div>
           <div className="hidden text-sm text-muted-foreground md:block">
-            Offline-first bank statement invoice generator
+            Offline-first bank statement PDF generator
           </div>
           <div className="md:hidden">
             <ThemeToggle />

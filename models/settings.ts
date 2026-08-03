@@ -54,5 +54,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   orientation: "portrait",
   preparedBy: "Adhil Manaf",
-  showWatermark: false,
+  showWatermark: true,
 };

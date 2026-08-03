@@ -37,7 +37,17 @@ export async function ensureDefaultSettings(): Promise<AppSettings> {
   if (existing) {
     if (existing.companyName === "My Company") {
       const logoBase64 = existing.logoBase64 || (await loadDefaultLogoBase64());
-      const settings = { ...DEFAULT_SETTINGS, logoBase64, invoiceCounter: existing.invoiceCounter };
+      const settings = {
+        ...DEFAULT_SETTINGS,
+        logoBase64,
+        watermarkBase64: existing.watermarkBase64 || logoBase64,
+        invoiceCounter: existing.invoiceCounter,
+      };
+      await db.settings.put(settings);
+      return settings;
+    }
+    if (existing.showWatermark && !existing.watermarkBase64 && existing.logoBase64) {
+      const settings = { ...existing, watermarkBase64: existing.logoBase64 };
       await db.settings.put(settings);
       return settings;
     }
@@ -45,7 +55,11 @@ export async function ensureDefaultSettings(): Promise<AppSettings> {
   }
 
   const logoBase64 = await loadDefaultLogoBase64();
-  const settings = { ...DEFAULT_SETTINGS, logoBase64 };
+  const settings = {
+    ...DEFAULT_SETTINGS,
+    logoBase64,
+    watermarkBase64: logoBase64,
+  };
   await db.settings.put(settings);
   return settings;
 }

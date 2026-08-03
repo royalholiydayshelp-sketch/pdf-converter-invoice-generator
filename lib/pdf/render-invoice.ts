@@ -5,7 +5,6 @@ import {
   type PDFPage,
   type PDFFont,
   type PDFImage,
-  type PDFEmbeddedPage,
 } from "pdf-lib";
 import type { Transaction } from "@/models/transaction";
 import type { AppSettings } from "@/models/settings";
@@ -14,6 +13,7 @@ import {
   formatDisplayDate,
   toPdfText,
 } from "@/lib/utils/format";
+import { prepareWatermarkPngBytes } from "@/lib/pdf/watermark-image";
 
 interface RenderContext {
   page: PDFPage;
@@ -28,12 +28,15 @@ interface RenderContext {
 }
 
 const ROW_HEIGHT = 22;
-const HEADER_HEIGHT = 140;
+const HEADER_TABLE_GAP = 20;
+const LOGO_MAX_WIDTH = 72;
+const LOGO_MAX_HEIGHT = 72;
+const LOGO_TEXT_GAP = 12;
 const PAGE_NUMBER_HEIGHT = 25;
 const SUMMARY_FOOTER_HEIGHT = 90;
 const SETTINGS_FOOTER_HEIGHT = 20;
-const WATERMARK_OPACITY = 0.08;
-const WATERMARK_MAX_PAGE_RATIO = 0.55;
+const WATERMARK_OPACITY = 0.15;
+const WATERMARK_MAX_PAGE_RATIO = 0.45;
 
 interface WatermarkLayout {
   x: number;
@@ -60,64 +63,31 @@ function computeWatermarkLayout(
   };
 }
 
-function drawWatermarkBackground(
-  page: PDFPage,
-  embeddedStamp: PDFEmbeddedPage,
-  pageWidth: number,
-  pageHeight: number,
-) {
-  page.drawPage(embeddedStamp, {
-    x: 0,
-    y: 0,
-    width: pageWidth,
-    height: pageHeight,
-    opacity: WATERMARK_OPACITY,
-  });
-}
-
-function decodeImageBase64(base64: string): { bytes: Uint8Array; isPng: boolean } | null {
-  if (!base64) return null;
-  try {
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const isPng = base64.startsWith("iVBOR") || bytes[0] === 0x89;
-    return { bytes, isPng };
-  } catch {
-    return null;
-  }
-}
-
-async function createWatermarkStamp(
-  pdfDoc: PDFDocument,
-  imageData: { bytes: Uint8Array; isPng: boolean },
-  pageWidth: number,
-  pageHeight: number,
-): Promise<PDFEmbeddedPage> {
-  const stampDoc = await PDFDocument.create();
-  const stampPage = stampDoc.addPage([pageWidth, pageHeight]);
-  const image = imageData.isPng
-    ? await stampDoc.embedPng(imageData.bytes)
-    : await stampDoc.embedJpg(imageData.bytes);
-  const layout = computeWatermarkLayout(pageWidth, pageHeight, image);
-
-  stampPage.drawImage(image, {
+function drawWatermark(page: PDFPage, image: PDFImage, layout: WatermarkLayout) {
+  page.drawImage(image, {
     x: layout.x,
     y: layout.y,
     width: layout.width,
     height: layout.height,
+    opacity: WATERMARK_OPACITY,
   });
-
-  const [embeddedPage] = await pdfDoc.embedPdf(await stampDoc.save(), [0]);
-  return embeddedPage;
 }
 
-function hexToRgb(hex: string) {
-  const cleaned = hex.replace("#", "");
-  const num = parseInt(cleaned, 16);
-  return rgb(
-    ((num >> 16) & 255) / 255,
-    ((num >> 8) & 255) / 255,
-    (num & 255) / 255,
-  );
+function getWatermarkBase64(settings: AppSettings): string {
+  if (!settings.showWatermark) return "";
+  return settings.watermarkBase64 || settings.logoBase64;
+}
+
+async function prepareWatermarkBytes(base64: string): Promise<Uint8Array | null> {
+  if (!base64) return null;
+  try {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const isPng = base64.startsWith("iVBOR") || bytes[0] === 0x89;
+    const mime = isPng ? "image/png" : "image/jpeg";
+    return prepareWatermarkPngBytes(bytes, mime);
+  } catch {
+    return null;
+  }
 }
 
 async function embedImage(pdfDoc: PDFDocument, base64: string) {
@@ -133,23 +103,58 @@ async function embedImage(pdfDoc: PDFDocument, base64: string) {
   }
 }
 
-function drawHeader(ctx: RenderContext, invoiceNumber: string, invoiceDate: string) {
+async function embedWatermarkImage(
+  pdfDoc: PDFDocument,
+  bytes: Uint8Array,
+): Promise<PDFImage | null> {
+  try {
+    if (bytes[0] === 0x89) {
+      return pdfDoc.embedPng(bytes);
+    }
+    return pdfDoc.embedJpg(bytes);
+  } catch {
+    return null;
+  }
+}
+
+function hexToRgb(hex: string) {
+  const cleaned = hex.replace("#", "");
+  const num = parseInt(cleaned, 16);
+  return rgb(
+    ((num >> 16) & 255) / 255,
+    ((num >> 8) & 255) / 255,
+    (num & 255) / 255,
+  );
+}
+
+function drawHeader(
+  ctx: RenderContext,
+  statementNumber: string,
+  statementDate: string,
+  logo: PDFImage | null,
+): number {
   const { page, font, boldFont, width, height, margin, settings } = ctx;
   const primary = hexToRgb(settings.primaryColor);
-  let y = height - margin;
+  let lowestY = height - margin;
 
+  let textX = margin;
+  if (logo) {
+    const logoDims = logo.scaleToFit(LOGO_MAX_WIDTH, LOGO_MAX_HEIGHT);
+    page.drawImage(logo, {
+      x: margin,
+      y: height - margin - logoDims.height,
+      width: logoDims.width,
+      height: logoDims.height,
+    });
+    textX = margin + logoDims.width + LOGO_TEXT_GAP;
+    lowestY = Math.min(lowestY, height - margin - logoDims.height);
+  }
+
+  let y = height - margin;
   page.drawText(toPdfText(settings.companyName), {
-    x: margin,
+    x: textX,
     y: y - 10,
     size: 18,
-    font: boldFont,
-    color: primary,
-  });
-
-  page.drawText("INVOICE", {
-    x: width - margin - 100,
-    y: y - 10,
-    size: 22,
     font: boldFont,
     color: primary,
   });
@@ -163,36 +168,34 @@ function drawHeader(ctx: RenderContext, invoiceNumber: string, invoiceDate: stri
   ].filter(Boolean);
 
   for (const line of companyLines) {
-    page.drawText(toPdfText(line), { x: margin, y, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(toPdfText(line), {
+      x: textX,
+      y,
+      size: 9,
+      font,
+      color: rgb(0.3, 0.3, 0.3),
+    });
     y -= 12;
   }
+  lowestY = Math.min(lowestY, y);
 
-  page.drawText(toPdfText(`Invoice No: ${invoiceNumber}`), {
+  const statementNoY = height - margin - 40;
+  const dateY = height - margin - 55;
+  page.drawText(toPdfText(`Statement No: ${statementNumber}`), {
     x: width - margin - 180,
-    y: height - margin - 40,
+    y: statementNoY,
     size: 10,
     font: boldFont,
   });
-  page.drawText(toPdfText(`Date: ${invoiceDate}`), {
+  page.drawText(toPdfText(`Date: ${statementDate}`), {
     x: width - margin - 180,
-    y: height - margin - 55,
+    y: dateY,
     size: 10,
     font,
   });
+  lowestY = Math.min(lowestY, dateY - 12);
 
-  y -= 10;
-  page.drawText("Bill To:", { x: margin, y, size: 10, font: boldFont });
-  y -= 14;
-  const customerLines = [
-    settings.customerName,
-    settings.customerAddress,
-    settings.customerPhone,
-    settings.customerEmail,
-  ].filter(Boolean);
-  for (const line of customerLines) {
-    page.drawText(toPdfText(line), { x: margin, y, size: 9, font });
-    y -= 12;
-  }
+  return lowestY - HEADER_TABLE_GAP;
 }
 
 function drawTableHeader(ctx: RenderContext, y: number): number {
@@ -323,13 +326,23 @@ export async function renderInvoicePdf(
   const margin = 40;
 
   const logo = await embedImage(pdfDoc, settings.logoBase64);
-  const watermarkSource = settings.showWatermark
-    ? settings.watermarkBase64 || settings.logoBase64
-    : "";
-  const watermarkImageData = decodeImageBase64(watermarkSource);
-  const embeddedWatermarkStamp = watermarkImageData
-    ? await createWatermarkStamp(pdfDoc, watermarkImageData, pageSize[0], pageSize[1])
-    : null;
+
+  let watermarkImage: PDFImage | null = null;
+  let watermarkLayout: WatermarkLayout | null = null;
+  const watermarkBase64 = getWatermarkBase64(settings);
+  if (watermarkBase64) {
+    const watermarkBytes = await prepareWatermarkBytes(watermarkBase64);
+    if (watermarkBytes) {
+      watermarkImage = await embedWatermarkImage(pdfDoc, watermarkBytes);
+      if (watermarkImage) {
+        watermarkLayout = computeWatermarkLayout(
+          pageSize[0],
+          pageSize[1],
+          watermarkImage,
+        );
+      }
+    }
+  }
 
   const totals = {
     debit: sorted.reduce((s, tx) => s + tx.debit, 0),
@@ -355,10 +368,6 @@ export async function renderInvoicePdf(
     const page = pdfDoc.addPage(pageSize);
     const { width, height } = page.getSize();
 
-    if (embeddedWatermarkStamp) {
-      drawWatermarkBackground(page, embeddedWatermarkStamp, width, height);
-    }
-
     const ctx: RenderContext = {
       page,
       font,
@@ -371,21 +380,16 @@ export async function renderInvoicePdf(
       totalPages: 0,
     };
 
-    if (logo && pageNum === 1) {
-      const logoDims = logo.scale(0.25);
-      page.drawImage(logo, {
-        x: width - margin - logoDims.width,
-        y: height - margin - logoDims.height + 10,
-        width: logoDims.width,
-        height: logoDims.height,
-      });
+    if (watermarkImage && watermarkLayout) {
+      drawWatermark(page, watermarkImage, watermarkLayout);
     }
 
+    let y: number;
     if (pageNum === 1) {
-      drawHeader(ctx, invoiceNumber, invoiceDate);
+      y = drawHeader(ctx, invoiceNumber, invoiceDate, logo);
+    } else {
+      y = height - margin - 20;
     }
-
-    let y = pageNum === 1 ? height - HEADER_HEIGHT : height - margin - 20;
     y = drawTableHeader(ctx, y);
 
     while (rowIndex < sorted.length) {
@@ -401,14 +405,14 @@ export async function renderInvoicePdf(
   }
 
   const totalPages = pageContexts.length;
-  pageContexts.forEach((ctx, index) => {
+  for (const [index, ctx] of pageContexts.entries()) {
     ctx.pageNumber = index + 1;
     ctx.totalPages = totalPages;
     if (index === totalPages - 1) {
       drawSummaryFooter(ctx, totals);
     }
     drawPageNumber(ctx);
-  });
+  }
 
   return pdfDoc.save();
 }

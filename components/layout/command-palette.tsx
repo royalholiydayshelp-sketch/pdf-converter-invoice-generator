@@ -25,7 +25,7 @@ const pages = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Upload CSV", href: "/upload", icon: Upload },
   { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Invoices", href: "/invoices", icon: FileText },
+  { label: "Statements", href: "/statements", icon: FileText },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

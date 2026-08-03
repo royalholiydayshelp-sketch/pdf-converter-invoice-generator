@@ -8,7 +8,7 @@ export default function TransactionsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
         <p className="text-muted-foreground">
-          Search, filter, export, and generate invoices from your transactions.
+          Search, filter, export, and generate PDFs from your transactions.
         </p>
       </div>
       <TransactionsTable />

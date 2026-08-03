@@ -30,7 +30,7 @@ import type { Invoice } from "@/models/invoice";
 import { formatCurrency, formatDisplayDate, downloadBlob } from "@/lib/utils/format";
 import { format } from "date-fns";
 
-export function InvoiceHistory() {
+export function InvoiceHistory({ refreshToken = 0 }: { refreshToken?: number }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [search, setSearch] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function InvoiceHistory() {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+  }, [refresh, refreshToken]);
 
   const filtered = invoices.filter((inv) => {
     if (!search) return true;
@@ -82,7 +82,7 @@ export function InvoiceHistory() {
   const handleDelete = async (id: string) => {
     await deleteInvoice(id);
     refresh();
-    toast.success("Invoice deleted");
+    toast.success("Statement deleted");
   };
 
   return (
@@ -90,7 +90,7 @@ export function InvoiceHistory() {
       <div className="flex items-center gap-2">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by invoice number or date..."
+          placeholder="Search by statement number or date..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
@@ -101,7 +101,7 @@ export function InvoiceHistory() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Invoice Number</TableHead>
+              <TableHead>Statement Number</TableHead>
               <TableHead>Generated Date</TableHead>
               <TableHead>Transactions</TableHead>
               <TableHead>Total Debit</TableHead>
@@ -113,13 +113,13 @@ export function InvoiceHistory() {
             {loading ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  Loading invoices...
+                  Loading statements...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  No invoices generated yet.
+                  No statements generated yet.
                 </TableCell>
               </TableRow>
             ) : (
@@ -176,13 +176,13 @@ export function InvoiceHistory() {
       }}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Invoice Preview</DialogTitle>
+            <DialogTitle>Statement Preview</DialogTitle>
           </DialogHeader>
           {previewUrl && (
             <iframe
               src={previewUrl}
               className="h-[70vh] w-full rounded-lg border"
-              title="Invoice Preview"
+              title="Statement Preview"
             />
           )}
         </DialogContent>

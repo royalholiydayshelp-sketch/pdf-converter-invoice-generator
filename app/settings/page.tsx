@@ -8,7 +8,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Customize company branding, invoice layout, theme, and backup data.
+          Customize company branding, statement layout, theme, and backup data.
         </p>
       </div>
       <SettingsForm />

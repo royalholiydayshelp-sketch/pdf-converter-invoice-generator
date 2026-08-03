@@ -35,11 +35,14 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 interface GenerateInvoiceMenuProps {
   selectedIds: string[];
   onGenerated?: () => void;
+  /** Hide selection-based options (for Invoices page). */
+  createOnly?: boolean;
 }
 
 export function GenerateInvoiceMenu({
   selectedIds,
   onGenerated,
+  createOnly = false,
 }: GenerateInvoiceMenuProps) {
   const { filters } = useFilterStore();
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
@@ -170,7 +173,7 @@ export function GenerateInvoiceMenu({
 
   const handleSingle = async () => {
     if (selectedIds.length !== 1) {
-      toast.error("Select exactly one transaction for single invoice");
+      toast.error("Select exactly one transaction for single statement");
       return;
     }
     const transactions = await getTransactionsByIds(selectedIds);
@@ -184,26 +187,30 @@ export function GenerateInvoiceMenu({
           className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/80"
         >
           <FileText className="h-4 w-4" />
-          {generating ? "Generating..." : "Generate Invoice"}
+          {generating ? "Generating..." : "Generate PDF"}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={handleSingle}>
-            Generate Single Invoice
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSelected}>
-            Generate Selected
-          </DropdownMenuItem>
+          {!createOnly && (
+            <>
+              <DropdownMenuItem onClick={handleSingle}>
+                Single Transaction PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSelected}>
+                Selected Transactions PDF
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem onClick={() => setDateDialogOpen(true)}>
-            Generate Date Wise
+            Date Wise PDF
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleMonthWise}>
-            Generate Month Wise
+            Month Wise PDF
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setRangeDialogOpen(true)}>
-            Custom Date Range
+            Custom Date Range PDF
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleAllFiltered}>
-            Generate All (Filtered)
+            All Filtered PDF
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -211,7 +218,7 @@ export function GenerateInvoiceMenu({
       <Dialog open={dateDialogOpen} onOpenChange={setDateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Generate Date Wise Invoice</DialogTitle>
+            <DialogTitle>Generate Date Wise PDF</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">

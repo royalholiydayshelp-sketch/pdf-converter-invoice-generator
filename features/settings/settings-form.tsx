@@ -84,7 +84,7 @@ export function SettingsForm() {
       <Tabs defaultValue="company">
         <TabsList>
           <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="invoice">Invoice</TabsTrigger>
+          <TabsTrigger value="statement">Statement</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="backup">Backup</TabsTrigger>
         </TabsList>
@@ -116,7 +116,7 @@ export function SettingsForm() {
                 <Input {...form.register("email")} />
               </div>
               <div className="space-y-2">
-                <Label>Logo</Label>
+                <Label>Logo (header, top-left)</Label>
                 <Input
                   type="file"
                   accept="image/*"
@@ -127,40 +127,16 @@ export function SettingsForm() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Details (Bill To)</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Customer Name</Label>
-                <Input {...form.register("customerName")} />
-              </div>
-              <div className="space-y-2">
-                <Label>Customer Phone</Label>
-                <Input {...form.register("customerPhone")} />
-              </div>
-              <div className="col-span-full space-y-2">
-                <Label>Customer Address</Label>
-                <Textarea {...form.register("customerAddress")} />
-              </div>
-              <div className="space-y-2">
-                <Label>Customer Email</Label>
-                <Input {...form.register("customerEmail")} />
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
-        <TabsContent value="invoice" className="space-y-4">
+        <TabsContent value="statement" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Settings</CardTitle>
+              <CardTitle>Statement Settings</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Invoice Prefix</Label>
+                <Label>Statement Prefix</Label>
                 <Input {...form.register("invoicePrefix")} />
               </div>
               <div className="space-y-2">
@@ -222,10 +198,10 @@ export function SettingsForm() {
                   checked={form.watch("showWatermark")}
                   onCheckedChange={(v) => form.setValue("showWatermark", v)}
                 />
-                <Label>Show Watermark</Label>
+                <Label>Show background watermark</Label>
               </div>
-              <div className="space-y-2">
-                <Label>Watermark Image</Label>
+              <div className="col-span-full space-y-2">
+                <Label>Watermark image (optional — uses logo if empty)</Label>
                 <Input
                   type="file"
                   accept="image/*"
