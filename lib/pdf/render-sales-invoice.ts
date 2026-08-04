@@ -8,6 +8,7 @@ import {
 } from "pdf-lib";
 import type { AppSettings } from "@/models/settings";
 import type { SalesInvoice } from "@/models/sales-invoice";
+import { PAYMENT_MODE_LABELS } from "@/models/sales-invoice";
 import {
   formatCurrencyForPdf,
   formatDisplayDate,
@@ -131,8 +132,30 @@ function drawCompanyHeader(
 
   y -= 18;
   const addressLines = wrapText(settings.address, 48);
-  for (const line of addressLines.slice(0, 4)) {
+  for (const line of addressLines.slice(0, 3)) {
     page.drawText(toPdfText(line), {
+      x: textX,
+      y,
+      size: 8,
+      font,
+      color: rgb(0.35, 0.35, 0.35),
+    });
+    y -= 12;
+  }
+
+  if (settings.phone) {
+    page.drawText(toPdfText(settings.phone), {
+      x: textX,
+      y,
+      size: 8,
+      font,
+      color: rgb(0.35, 0.35, 0.35),
+    });
+    y -= 12;
+  }
+
+  if (settings.email) {
+    page.drawText(toPdfText(settings.email), {
       x: textX,
       y,
       size: 8,
@@ -378,14 +401,42 @@ function drawFooter(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
   }
 
   const blockTop = y;
+  let infoY = blockTop;
+  page.drawText("Payment:", {
+    x: MARGIN,
+    y: infoY,
+    size: 8.5,
+    font: boldFont,
+  });
+  infoY -= 14;
+  page.drawText(
+    toPdfText(PAYMENT_MODE_LABELS[invoice.paymentMode ?? "upi"]),
+    {
+      x: MARGIN,
+      y: infoY,
+      size: 8.5,
+      font,
+    },
+  );
+  infoY -= 12;
+
+  if (invoice.paymentMode === "upi" && invoice.upiTransactionId.trim()) {
+    page.drawText(
+      toPdfText(`Transaction ID: ${invoice.upiTransactionId.trim()}`),
+      { x: MARGIN, y: infoY, size: 8.5, font },
+    );
+    infoY -= 14;
+  }
+
+  infoY -= 4;
   page.drawText("Remarks / Payment Instructions:", {
     x: MARGIN,
-    y: blockTop,
+    y: infoY,
     size: 8.5,
     font: boldFont,
   });
   const remarkLines = wrapText(invoice.remarks || "-", 52);
-  let remarkY = blockTop - 16;
+  let remarkY = infoY - 16;
   for (const line of remarkLines.slice(0, 4)) {
     page.drawText(toPdfText(line), {
       x: MARGIN,

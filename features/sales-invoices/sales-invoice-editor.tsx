@@ -11,12 +11,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSettings } from "@/hooks/use-settings";
 import {
   DEFAULT_LINE_ITEM,
   DEFAULT_SALES_INVOICE_FORM,
+  PAYMENT_MODE_LABELS,
   salesInvoiceFormSchema,
+  type PaymentMode,
   type SalesInvoice,
   type SalesInvoiceFormValues,
 } from "@/models/sales-invoice";
@@ -53,6 +62,9 @@ function formToSalesInvoice(
     billToEmail: values.billToEmail,
     shipToDescription: values.shipToDescription,
     lineItems: totals.lineItems,
+    paymentMode: values.paymentMode,
+    upiTransactionId:
+      values.paymentMode === "upi" ? values.upiTransactionId : "",
     remarks: values.remarks,
     discount: totals.discount,
     taxRatePercent: totals.taxRatePercent,
@@ -84,6 +96,8 @@ function salesInvoiceToForm(invoice: SalesInvoice): SalesInvoiceFormValues {
       unitPrice,
     })),
     remarks: invoice.remarks,
+    paymentMode: invoice.paymentMode ?? "upi",
+    upiTransactionId: invoice.upiTransactionId ?? "",
     discount: invoice.discount,
     taxRatePercent: invoice.taxRatePercent,
     autoRound: invoice.roundAdjustment !== 0,
@@ -109,6 +123,7 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
   });
 
   const watched = form.watch();
+  const paymentMode = form.watch("paymentMode");
   const totals = useMemo(
     () =>
       calculateSalesInvoiceTotals({
@@ -374,6 +389,48 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Payment Mode</Label>
+                <Select
+                  value={paymentMode}
+                  onValueChange={(v) => {
+                    form.setValue("paymentMode", v as PaymentMode);
+                    if (v !== "upi") {
+                      form.setValue("upiTransactionId", "");
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(PAYMENT_MODE_LABELS) as PaymentMode[]).map(
+                      (mode) => (
+                        <SelectItem key={mode} value={mode}>
+                          {PAYMENT_MODE_LABELS[mode]}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {paymentMode === "upi" && (
+                <div className="space-y-2">
+                  <Label>UPI Transaction ID</Label>
+                  <Input
+                    {...form.register("upiTransactionId")}
+                    placeholder="e.g. 123456789012"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 

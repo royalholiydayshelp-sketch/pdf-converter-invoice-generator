@@ -18,6 +18,16 @@ export const salesInvoiceTemplateSchema = z.literal("default");
 
 export type SalesInvoiceTemplate = z.infer<typeof salesInvoiceTemplateSchema>;
 
+export const paymentModeSchema = z.enum(["upi", "credit_card", "debit_card"]);
+
+export type PaymentMode = z.infer<typeof paymentModeSchema>;
+
+export const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
+  upi: "UPI",
+  credit_card: "Credit Card",
+  debit_card: "Debit Card",
+};
+
 export const salesInvoiceSchema = z.object({
   id: z.string().uuid(),
   invoiceNumber: z.string(),
@@ -30,6 +40,8 @@ export const salesInvoiceSchema = z.object({
   billToEmail: z.string(),
   shipToDescription: z.string(),
   lineItems: z.array(salesInvoiceLineItemSchema).min(1),
+  paymentMode: paymentModeSchema,
+  upiTransactionId: z.string(),
   remarks: z.string(),
   discount: z.number().min(0),
   taxRatePercent: z.number().min(0),
@@ -62,6 +74,8 @@ export const salesInvoiceFormSchema = z.object({
       unitPrice: z.number().min(0),
     }),
   ).min(1),
+  paymentMode: paymentModeSchema,
+  upiTransactionId: z.string(),
   remarks: z.string(),
   discount: z.number().min(0),
   taxRatePercent: z.number().min(0),
@@ -88,6 +102,8 @@ export const DEFAULT_SALES_INVOICE_FORM: SalesInvoiceFormValues = {
   billToEmail: "",
   shipToDescription: "",
   lineItems: [DEFAULT_LINE_ITEM()],
+  paymentMode: "upi",
+  upiTransactionId: "",
   remarks: "",
   discount: 0,
   taxRatePercent: 18,

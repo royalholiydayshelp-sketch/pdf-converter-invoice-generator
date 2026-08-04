@@ -2,7 +2,8 @@
 
 import type { AppSettings } from "@/models/settings";
 import type { SalesInvoiceTotals } from "@/lib/sales-invoices/calculate-totals";
-import type { SalesInvoiceFormValues } from "@/models/sales-invoice";
+import type { SalesInvoiceFormValues, PaymentMode } from "@/models/sales-invoice";
+import { PAYMENT_MODE_LABELS } from "@/models/sales-invoice";
 import { formatCurrency, formatDisplayDate } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +52,12 @@ export function SalesInvoicePreview({
             <p className="mt-1 max-w-sm text-xs text-muted-foreground whitespace-pre-line">
               {settings?.address}
             </p>
+            {settings?.phone && (
+              <p className="mt-1 text-xs text-muted-foreground">{settings.phone}</p>
+            )}
+            {settings?.email && (
+              <p className="mt-1 text-xs text-muted-foreground">{settings.email}</p>
+            )}
             {settings?.gstVat && (
               <p className="mt-1 text-xs font-medium">GST: {settings.gstVat}</p>
             )}
@@ -148,7 +155,16 @@ export function SalesInvoicePreview({
           />
         )}
         <div className="relative z-10">
-          <p className="text-xs font-semibold">Remarks / Payment Instructions:</p>
+          <p className="text-xs font-semibold">Payment</p>
+          <p className="mt-1 text-sm">
+            {PAYMENT_MODE_LABELS[form.paymentMode as PaymentMode]}
+          </p>
+          {form.paymentMode === "upi" && form.upiTransactionId && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Transaction ID: {form.upiTransactionId}
+            </p>
+          )}
+          <p className="mt-4 text-xs font-semibold">Remarks / Payment Instructions:</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {form.remarks || "—"}
           </p>
