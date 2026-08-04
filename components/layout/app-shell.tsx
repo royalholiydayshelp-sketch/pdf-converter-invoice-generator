@@ -7,6 +7,7 @@ import {
   Upload,
   ArrowLeftRight,
   FileText,
+  Receipt,
   Settings,
   Menu,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/upload", label: "Upload", icon: Upload },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/statements", label: "Statements", icon: FileText },
+  { href: "/invoices", label: "Invoices", icon: Receipt },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -34,7 +36,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           onClick={onNavigate}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-            pathname === href
+            pathname === href ||
+              (href === "/invoices" && pathname.startsWith("/invoices"))
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:bg-muted hover:text-foreground",
           )}

@@ -1,13 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  redirects: async () => [
-    {
-      source: "/invoices",
-      destination: "/statements",
-      permanent: true,
-    },
-  ],
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

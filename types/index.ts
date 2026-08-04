@@ -5,6 +5,7 @@ export type {
 } from "@/models/transaction";
 export type { ImportRecord } from "@/models/import-record";
 export type { Invoice, InvoiceGenerationMode } from "@/models/invoice";
+export type { SalesInvoice, SalesInvoiceLineItem, SalesInvoiceFormValues } from "@/models/sales-invoice";
 export type { AppSettings } from "@/models/settings";
 
 export interface ImportSummary {
@@ -52,11 +53,12 @@ export type DatePreset =
   | "custom";
 
 export interface BackupData {
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   transactions: import("@/models/transaction").Transaction[];
   imports: import("@/models/import-record").ImportRecord[];
   invoices: import("@/models/invoice").Invoice[];
+  salesInvoices?: import("@/models/sales-invoice").SalesInvoice[];
   settings: import("@/models/settings").AppSettings;
   pdfBlobs: Record<string, string>;
 }

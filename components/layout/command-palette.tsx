@@ -7,6 +7,7 @@ import {
   Upload,
   ArrowLeftRight,
   FileText,
+  Receipt,
   Settings,
   Search,
 } from "lucide-react";
@@ -26,6 +27,8 @@ const pages = [
   { label: "Upload CSV", href: "/upload", icon: Upload },
   { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
   { label: "Statements", href: "/statements", icon: FileText },
+  { label: "Invoices", href: "/invoices", icon: Receipt },
+  { label: "Create Invoice", href: "/invoices/create", icon: Receipt },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

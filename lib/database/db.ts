@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 import type { Transaction } from "@/models/transaction";
 import type { ImportRecord } from "@/models/import-record";
 import type { Invoice } from "@/models/invoice";
+import type { SalesInvoice } from "@/models/sales-invoice";
 import type { AppSettings } from "@/models/settings";
 import { DEFAULT_SETTINGS } from "@/models/settings";
 
@@ -14,6 +15,7 @@ class StatementInvoiceDB extends Dexie {
   transactions!: EntityTable<Transaction, "id">;
   imports!: EntityTable<ImportRecord, "id">;
   invoices!: EntityTable<Invoice, "id">;
+  salesInvoices!: EntityTable<SalesInvoice, "id">;
   settings!: EntityTable<AppSettings, "id">;
   pdfBlobs!: EntityTable<PdfBlob, "key">;
 
@@ -24,6 +26,15 @@ class StatementInvoiceDB extends Dexie {
         "id, date, description, reference, transactionId, sourceFile, uploadedAt, invoiceGenerated, [date+description]",
       imports: "id, fileName, importDate",
       invoices: "id, invoiceNumber, generatedDate",
+      settings: "id",
+      pdfBlobs: "key",
+    });
+    this.version(2).stores({
+      transactions:
+        "id, date, description, reference, transactionId, sourceFile, uploadedAt, invoiceGenerated, [date+description]",
+      imports: "id, fileName, importDate",
+      invoices: "id, invoiceNumber, generatedDate",
+      salesInvoices: "id, invoiceNumber, invoiceDate, status, updatedAt",
       settings: "id",
       pdfBlobs: "key",
     });
@@ -48,6 +59,18 @@ export async function ensureDefaultSettings(): Promise<AppSettings> {
     }
     if (existing.showWatermark && !existing.watermarkBase64 && existing.logoBase64) {
       const settings = { ...existing, watermarkBase64: existing.logoBase64 };
+      await db.settings.put(settings);
+      return settings;
+    }
+    if (
+      existing.salesInvoicePrefix === undefined ||
+      existing.salesInvoiceCounter === undefined
+    ) {
+      const settings = {
+        ...existing,
+        salesInvoicePrefix: existing.salesInvoicePrefix ?? "",
+        salesInvoiceCounter: existing.salesInvoiceCounter ?? 0,
+      };
       await db.settings.put(settings);
       return settings;
     }

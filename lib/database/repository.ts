@@ -292,11 +292,12 @@ export async function deleteInvoice(id: string): Promise<void> {
 }
 
 export async function exportDatabase() {
-  const [transactions, imports, invoices, settings, pdfBlobRecords] =
+  const [transactions, imports, invoices, salesInvoices, settings, pdfBlobRecords] =
     await Promise.all([
       db.transactions.toArray(),
       db.imports.toArray(),
       db.invoices.toArray(),
+      db.salesInvoices.toArray(),
       getSettings(),
       db.pdfBlobs.toArray(),
     ]);
@@ -312,11 +313,12 @@ export async function exportDatabase() {
   }
 
   return {
-    version: 1 as const,
+    version: 2 as const,
     exportedAt: new Date().toISOString(),
     transactions,
     imports,
     invoices,
+    salesInvoices,
     settings,
     pdfBlobs,
   };
@@ -326,6 +328,7 @@ export async function importDatabase(data: {
   transactions?: Transaction[];
   imports?: ImportRecord[];
   invoices?: Invoice[];
+  salesInvoices?: import("@/models/sales-invoice").SalesInvoice[];
   settings?: AppSettings;
   pdfBlobs?: Record<string, string>;
 }): Promise<void> {
@@ -358,4 +361,8 @@ export async function importDatabase(data: {
       }
     },
   );
+
+  if (data.salesInvoices?.length) {
+    await db.salesInvoices.bulkPut(data.salesInvoices);
+  }
 }

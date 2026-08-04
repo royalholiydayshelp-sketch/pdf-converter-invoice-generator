@@ -140,6 +140,13 @@ export function SettingsForm() {
                 <Input {...form.register("invoicePrefix")} />
               </div>
               <div className="space-y-2">
+                <Label>Sales Invoice Prefix</Label>
+                <Input
+                  {...form.register("salesInvoicePrefix")}
+                  placeholder="Optional prefix before number"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Currency</Label>
                 <Input {...form.register("currency")} />
               </div>
