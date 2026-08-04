@@ -21,6 +21,7 @@ import {
   getSalesInvoices,
 } from "@/lib/database/sales-invoice-repository";
 import type { SalesInvoice } from "@/models/sales-invoice";
+import { PAYMENT_STATUS_LABELS } from "@/models/sales-invoice";
 import { formatCurrency, formatDisplayDate, downloadBlob } from "@/lib/utils/format";
 
 export function SalesInvoiceList() {
@@ -87,7 +88,8 @@ export function SalesInvoiceList() {
               <TableHead>Invoice No.</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Customer</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead>Doc Status</TableHead>
               <TableHead>Balance Due</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -95,13 +97,13 @@ export function SalesInvoiceList() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Loading invoices...
                 </TableCell>
               </TableRow>
             ) : invoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No invoices yet. Create your first invoice.
                 </TableCell>
               </TableRow>
@@ -115,6 +117,19 @@ export function SalesInvoiceList() {
                     {formatDisplayDate(invoice.invoiceDate)}
                   </TableCell>
                   <TableCell>{invoice.billToName}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        invoice.paymentStatus === "paid"
+                          ? "default"
+                          : invoice.paymentStatus === "unpaid"
+                            ? "destructive"
+                            : "secondary"
+                      }
+                    >
+                      {PAYMENT_STATUS_LABELS[invoice.paymentStatus ?? "nil"]}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={invoice.status === "finalized" ? "default" : "secondary"}

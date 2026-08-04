@@ -5,7 +5,7 @@ export type {
 } from "@/models/transaction";
 export type { ImportRecord } from "@/models/import-record";
 export type { Invoice, InvoiceGenerationMode } from "@/models/invoice";
-export type { SalesInvoice, SalesInvoiceLineItem, SalesInvoiceFormValues } from "@/models/sales-invoice";
+export type { SalesInvoice, SalesInvoiceLineItem, SalesInvoiceFormValues, PaymentStatus, PaymentMode } from "@/models/sales-invoice";
 export type { AppSettings } from "@/models/settings";
 
 export interface ImportSummary {

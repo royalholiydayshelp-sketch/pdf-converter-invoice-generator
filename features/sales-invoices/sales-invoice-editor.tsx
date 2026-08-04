@@ -23,9 +23,12 @@ import { useSettings } from "@/hooks/use-settings";
 import {
   DEFAULT_LINE_ITEM,
   DEFAULT_SALES_INVOICE_FORM,
+  resolveInvoiceNumber,
   PAYMENT_MODE_LABELS,
+  PAYMENT_STATUS_LABELS,
   salesInvoiceFormSchema,
   type PaymentMode,
+  type PaymentStatus,
   type SalesInvoice,
   type SalesInvoiceFormValues,
 } from "@/models/sales-invoice";
@@ -34,7 +37,6 @@ import { SalesInvoicePreview } from "@/features/sales-invoices/sales-invoice-pre
 import { renderSalesInvoicePdf } from "@/lib/pdf/render-sales-invoice";
 import {
   getSalesInvoice,
-  reserveSalesInvoiceNumber,
   saveSalesInvoice,
 } from "@/lib/database/sales-invoice-repository";
 import { getSettings } from "@/lib/database/repository";
@@ -52,9 +54,10 @@ function formToSalesInvoice(
   const now = new Date().toISOString();
   return {
     id: existing.id ?? crypto.randomUUID(),
-    invoiceNumber: existing.invoiceNumber ?? "",
+    invoiceNumber: resolveInvoiceNumber(values.invoiceNumber),
     status: existing.status ?? "draft",
     invoiceDate: values.invoiceDate,
+    paymentStatus: values.paymentStatus,
     referenceNumber: values.referenceNumber,
     billToName: values.billToName,
     billToPhone: values.billToPhone,
@@ -82,7 +85,9 @@ function formToSalesInvoice(
 
 function salesInvoiceToForm(invoice: SalesInvoice): SalesInvoiceFormValues {
   return {
+    invoiceNumber: invoice.invoiceNumber,
     invoiceDate: invoice.invoiceDate,
+    paymentStatus: invoice.paymentStatus ?? "nil",
     referenceNumber: invoice.referenceNumber,
     billToName: invoice.billToName,
     billToPhone: invoice.billToPhone,
@@ -170,17 +175,14 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
       }
 
       const values = form.getValues();
-      let invoiceNumber = savedInvoice.invoiceNumber ?? "";
-      let status = savedInvoice.status ?? "draft";
-
-      if (finalize && !invoiceNumber) {
-        invoiceNumber = await reserveSalesInvoiceNumber();
-        status = "finalized";
+      const invoiceNumber = resolveInvoiceNumber(values.invoiceNumber);
+      if (!values.invoiceNumber.trim()) {
+        form.setValue("invoiceNumber", invoiceNumber);
       }
+      const status = finalize ? "finalized" : (savedInvoice.status ?? "draft");
 
       const invoice = formToSalesInvoice(values, totals, {
         ...savedInvoice,
-        invoiceNumber,
         status,
       });
 
@@ -269,8 +271,37 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
+                <Label>Invoice No.</Label>
+                <Input
+                  {...form.register("invoiceNumber")}
+                  placeholder="Leave empty for date & time (e.g. 04082026153900)"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Invoice Date</Label>
                 <Input type="date" {...form.register("invoiceDate")} />
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Status</Label>
+                <Select
+                  value={form.watch("paymentStatus")}
+                  onValueChange={(v) =>
+                    form.setValue("paymentStatus", v as PaymentStatus)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[]).map(
+                      (status) => (
+                        <SelectItem key={status} value={status}>
+                          {PAYMENT_STATUS_LABELS[status]}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Reference Number</Label>
@@ -490,7 +521,6 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
             form={watched}
             totals={totals}
             settings={settings}
-            invoiceNumber={savedInvoice.invoiceNumber}
           />
         </div>
       </div>

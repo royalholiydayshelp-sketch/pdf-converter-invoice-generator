@@ -8,7 +8,7 @@ import {
 } from "pdf-lib";
 import type { AppSettings } from "@/models/settings";
 import type { SalesInvoice } from "@/models/sales-invoice";
-import { PAYMENT_MODE_LABELS } from "@/models/sales-invoice";
+import { PAYMENT_MODE_LABELS, PAYMENT_STATUS_LABELS } from "@/models/sales-invoice";
 import {
   formatCurrencyForPdf,
   formatDisplayDate,
@@ -196,6 +196,12 @@ function drawCompanyHeader(
       size: 9,
       font: boldFont,
     });
+    page.drawText(
+      toPdfText(
+        `STATUS: ${PAYMENT_STATUS_LABELS[invoice.paymentStatus ?? "nil"]}`,
+      ),
+      { x: metaX, y: top - 72, size: 9, font },
+    );
   }
 
   return Math.min(y, logoBottom) - SECTION_GAP;
@@ -419,6 +425,14 @@ function drawFooter(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
     },
   );
   infoY -= 12;
+
+  page.drawText(
+    toPdfText(
+      `Payment Status: ${PAYMENT_STATUS_LABELS[invoice.paymentStatus ?? "nil"]}`,
+    ),
+    { x: MARGIN, y: infoY, size: 8.5, font },
+  );
+  infoY -= 14;
 
   if (invoice.paymentMode === "upi" && invoice.upiTransactionId.trim()) {
     page.drawText(

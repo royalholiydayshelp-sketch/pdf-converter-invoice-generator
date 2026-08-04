@@ -1,4 +1,14 @@
 import { z } from "zod";
+import { format } from "date-fns";
+
+export function generateDefaultInvoiceNumber(date = new Date()): string {
+  return format(date, "ddMMyyyyHHmmss");
+}
+
+export function resolveInvoiceNumber(value: string, date = new Date()): string {
+  const trimmed = value.trim();
+  return trimmed || generateDefaultInvoiceNumber(date);
+}
 
 export const salesInvoiceLineItemSchema = z.object({
   id: z.string(),
@@ -28,11 +38,22 @@ export const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
   debit_card: "Debit Card",
 };
 
+export const paymentStatusSchema = z.enum(["paid", "unpaid", "nil"]);
+
+export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  paid: "Paid",
+  unpaid: "Unpaid",
+  nil: "Nil",
+};
+
 export const salesInvoiceSchema = z.object({
   id: z.string().uuid(),
   invoiceNumber: z.string(),
   status: salesInvoiceStatusSchema,
   invoiceDate: z.string(),
+  paymentStatus: paymentStatusSchema,
   referenceNumber: z.string(),
   billToName: z.string(),
   billToPhone: z.string(),
@@ -59,7 +80,9 @@ export const salesInvoiceSchema = z.object({
 export type SalesInvoice = z.infer<typeof salesInvoiceSchema>;
 
 export const salesInvoiceFormSchema = z.object({
+  invoiceNumber: z.string(),
   invoiceDate: z.string().min(1),
+  paymentStatus: paymentStatusSchema,
   referenceNumber: z.string(),
   billToName: z.string().min(1, "Customer name is required"),
   billToPhone: z.string(),
@@ -94,7 +117,9 @@ export const DEFAULT_LINE_ITEM = (): SalesInvoiceLineItem => ({
 });
 
 export const DEFAULT_SALES_INVOICE_FORM: SalesInvoiceFormValues = {
+  invoiceNumber: "",
   invoiceDate: new Date().toISOString().slice(0, 10),
+  paymentStatus: "nil",
   referenceNumber: "",
   billToName: "",
   billToPhone: "",

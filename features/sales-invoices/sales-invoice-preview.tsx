@@ -2,8 +2,8 @@
 
 import type { AppSettings } from "@/models/settings";
 import type { SalesInvoiceTotals } from "@/lib/sales-invoices/calculate-totals";
-import type { SalesInvoiceFormValues, PaymentMode } from "@/models/sales-invoice";
-import { PAYMENT_MODE_LABELS } from "@/models/sales-invoice";
+import type { SalesInvoiceFormValues, PaymentMode, PaymentStatus } from "@/models/sales-invoice";
+import { PAYMENT_MODE_LABELS, PAYMENT_STATUS_LABELS } from "@/models/sales-invoice";
 import { formatCurrency, formatDisplayDate } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,6 @@ interface SalesInvoicePreviewProps {
   form: SalesInvoiceFormValues;
   totals: SalesInvoiceTotals;
   settings: AppSettings | null;
-  invoiceNumber?: string;
   className?: string;
 }
 
@@ -19,7 +18,6 @@ export function SalesInvoicePreview({
   form,
   totals,
   settings,
-  invoiceNumber,
   className,
 }: SalesInvoicePreviewProps) {
   const currency = settings?.currency ?? "INR";
@@ -70,9 +68,19 @@ export function SalesInvoicePreview({
           <p className="mt-2 text-xs font-semibold">
             DATE: {formatDisplayDate(form.invoiceDate, settings?.dateFormat)}
           </p>
-          {invoiceNumber && (
-            <p className="text-xs font-semibold">INVOICE NO. {invoiceNumber}</p>
-          )}
+          <p className="text-xs font-semibold">
+            INVOICE NO.{" "}
+            {form.invoiceNumber.trim() ? (
+              form.invoiceNumber
+            ) : (
+              <span className="font-normal text-muted-foreground">
+                auto on save (date & time)
+              </span>
+            )}
+          </p>
+          <p className="text-xs font-semibold">
+            STATUS: {PAYMENT_STATUS_LABELS[form.paymentStatus as PaymentStatus]}
+          </p>
         </div>
       </div>
 
