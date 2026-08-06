@@ -56,7 +56,7 @@ export function SalesInvoicePreview({
             {settings?.email && (
               <p className="mt-1 text-xs text-muted-foreground">{settings.email}</p>
             )}
-            {settings?.gstVat && (
+            {form.showGst && settings?.gstVat && (
               <p className="mt-1 text-xs font-medium">GST: {settings.gstVat}</p>
             )}
           </div>
@@ -84,7 +84,12 @@ export function SalesInvoicePreview({
         </div>
       </div>
 
-      <div className="mb-6 grid gap-6 sm:grid-cols-2">
+      <div
+        className={cn(
+          "mb-6 grid gap-6",
+          form.showShipTo ? "sm:grid-cols-2" : "sm:grid-cols-1",
+        )}
+      >
         <div>
           <p className="text-xs font-bold uppercase tracking-wide" style={{ color: primary }}>
             Bill To
@@ -103,16 +108,18 @@ export function SalesInvoicePreview({
             <p className="text-sm text-muted-foreground">{form.billToEmail}</p>
           )}
         </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: primary }}>
-            Ship To
-          </p>
-          <div className="mt-2 h-px w-14 bg-current opacity-30" style={{ color: primary }} />
-          <p className="mt-3 text-sm">{form.shipToDescription || "—"}</p>
-        </div>
+        {form.showShipTo && (
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: primary }}>
+              Ship To
+            </p>
+            <div className="mt-2 h-px w-14 bg-current opacity-30" style={{ color: primary }} />
+            <p className="mt-3 text-sm">{form.shipToDescription || "—"}</p>
+          </div>
+        )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
+      <div className="mb-10 overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs font-semibold uppercase" style={{ backgroundColor: `${primary}18`, color: primary }}>
@@ -148,12 +155,12 @@ export function SalesInvoicePreview({
       </div>
 
       {form.referenceNumber && (
-        <p className="my-4 text-center text-sm font-semibold">
+        <p className="mb-8 text-center text-sm font-semibold">
           {form.referenceNumber}
         </p>
       )}
 
-      <div className="relative mt-8 grid gap-8 sm:grid-cols-2">
+      <div className="relative mt-10 grid gap-8 sm:grid-cols-2">
         {settings?.showWatermark && settings.logoBase64 && (
           <img
             src={`data:image/jpeg;base64,${settings.watermarkBase64 || settings.logoBase64}`}
@@ -194,14 +201,22 @@ export function SalesInvoicePreview({
               {formatCurrency(totals.subtotalLessDiscount, currency)}
             </span>
           </div>
-          <div className="flex justify-between gap-6">
-            <span className="shrink-0 text-muted-foreground">Tax Rate</span>
-            <span className="font-medium tabular-nums">{totals.taxRatePercent.toFixed(2)}%</span>
-          </div>
-          <div className="flex justify-between gap-6">
-            <span className="shrink-0 text-muted-foreground">Total Tax</span>
-            <span className="font-medium tabular-nums">{formatCurrency(totals.totalTax, currency)}</span>
-          </div>
+          {form.showTax && (
+            <>
+              <div className="flex justify-between gap-6">
+                <span className="shrink-0 text-muted-foreground">Tax Rate</span>
+                <span className="font-medium tabular-nums">
+                  {totals.taxRatePercent.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between gap-6">
+                <span className="shrink-0 text-muted-foreground">Total Tax</span>
+                <span className="font-medium tabular-nums">
+                  {formatCurrency(totals.totalTax, currency)}
+                </span>
+              </div>
+            </>
+          )}
           <div className="flex justify-between gap-6">
             <span className="shrink-0 text-muted-foreground">Round</span>
             <span className="font-medium tabular-nums">
@@ -212,7 +227,7 @@ export function SalesInvoicePreview({
             className="mt-2 flex justify-between gap-4 rounded-lg px-3 py-2 font-bold"
             style={{ backgroundColor: `${primary}18`, color: primary }}
           >
-            <span>Balance Due</span>
+            <span>Total Amount</span>
             <span>{formatCurrency(totals.balanceDue, currency)}</span>
           </div>
         </div>

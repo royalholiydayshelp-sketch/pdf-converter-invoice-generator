@@ -12,6 +12,7 @@ export interface SalesInvoiceTotalsInput {
   taxRatePercent: number;
   autoRound: boolean;
   roundAdjustment: number;
+  showTax: boolean;
 }
 
 export interface SalesInvoiceTotals {
@@ -44,8 +45,9 @@ export function calculateSalesInvoiceTotals(
   );
   const discount = roundMoney(Math.min(input.discount, subtotal));
   const subtotalLessDiscount = roundMoney(subtotal - discount);
+  const effectiveTaxRate = input.showTax ? input.taxRatePercent : 0;
   const totalTax = roundMoney(
-    subtotalLessDiscount * (input.taxRatePercent / 100),
+    subtotalLessDiscount * (effectiveTaxRate / 100),
   );
   const preRoundTotal = roundMoney(subtotalLessDiscount + totalTax);
 

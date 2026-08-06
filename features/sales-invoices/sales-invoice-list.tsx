@@ -90,7 +90,7 @@ export function SalesInvoiceList() {
               <TableHead>Customer</TableHead>
               <TableHead>Payment</TableHead>
               <TableHead>Doc Status</TableHead>
-              <TableHead>Balance Due</TableHead>
+              <TableHead>Total Amount</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>

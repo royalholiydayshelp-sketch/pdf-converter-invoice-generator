@@ -23,6 +23,7 @@ import {
 const MARGIN = 48;
 const LOGO_MAX = 56;
 const SECTION_GAP = 24;
+const TABLE_FOOTER_GAP = 40;
 const TABLE_ROW_HEIGHT = 22;
 const TOTALS_ROW_HEIGHT = 16;
 const TOTALS_BLOCK_WIDTH = 210;
@@ -165,7 +166,7 @@ function drawCompanyHeader(
     y -= 12;
   }
 
-  if (settings.gstVat) {
+  if (settings.gstVat && (invoice.showGst ?? true)) {
     page.drawText(toPdfText(`GST: ${settings.gstVat}`), {
       x: textX,
       y,
@@ -209,6 +210,7 @@ function drawCompanyHeader(
 
 function drawCustomerBlocks(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
   const { page, font, boldFont, width } = ctx;
+  const showShipTo = invoice.showShipTo ?? true;
   const colWidth = (width - MARGIN * 2 - 32) / 2;
   const leftX = MARGIN;
   const rightX = MARGIN + colWidth + 32;
@@ -230,19 +232,21 @@ function drawCustomerBlocks(ctx: DrawContext, invoice: SalesInvoice, startY: num
     color: ctx.primary,
   });
 
-  page.drawText("SHIP TO", {
-    x: rightX,
-    y,
-    size: 9,
-    font: boldFont,
-    color: ctx.primary,
-  });
-  page.drawLine({
-    start: { x: rightX, y: y - 3 },
-    end: { x: rightX + 56, y: y - 3 },
-    thickness: 1,
-    color: ctx.primary,
-  });
+  if (showShipTo) {
+    page.drawText("SHIP TO", {
+      x: rightX,
+      y,
+      size: 9,
+      font: boldFont,
+      color: ctx.primary,
+    });
+    page.drawLine({
+      start: { x: rightX, y: y - 3 },
+      end: { x: rightX + 56, y: y - 3 },
+      thickness: 1,
+      color: ctx.primary,
+    });
+  }
 
   y -= 20;
   page.drawText(toPdfText(invoice.billToName), {
@@ -252,16 +256,19 @@ function drawCustomerBlocks(ctx: DrawContext, invoice: SalesInvoice, startY: num
     font: boldFont,
     maxWidth: colWidth - 8,
   });
-  page.drawText(toPdfText(invoice.shipToDescription), {
-    x: rightX,
-    y,
-    size: 9,
-    font,
-    maxWidth: colWidth - 8,
-  });
+
+  if (showShipTo) {
+    page.drawText(toPdfText(invoice.shipToDescription), {
+      x: rightX,
+      y,
+      size: 9,
+      font,
+      maxWidth: colWidth - 8,
+    });
+    rightBottom = y - 14;
+  }
 
   leftBottom = y - 14;
-  rightBottom = y - 14;
 
   if (invoice.billToPhone) {
     leftBottom -= 14;
@@ -293,7 +300,7 @@ function drawCustomerBlocks(ctx: DrawContext, invoice: SalesInvoice, startY: num
     });
   }
 
-  return Math.min(leftBottom, rightBottom) - SECTION_GAP;
+  return Math.min(leftBottom, showShipTo ? rightBottom : leftBottom) - SECTION_GAP;
 }
 
 function drawLineItemsTable(
@@ -385,7 +392,7 @@ function drawLineItemsTable(
     y -= TABLE_ROW_HEIGHT;
   }
 
-  return y - SECTION_GAP;
+  return y - TABLE_FOOTER_GAP;
 }
 
 function drawFooter(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
@@ -462,6 +469,7 @@ function drawFooter(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
     remarkY -= 12;
   }
 
+  const showTax = invoice.showTax ?? true;
   const totals: Array<[string, string]> = [
     ["SUBTOTAL", formatCurrencyForPdf(invoice.subtotal, settings.currency)],
     ["DISCOUNT", formatCurrencyForPdf(invoice.discount, settings.currency)],
@@ -469,8 +477,15 @@ function drawFooter(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
       "SUBTOTAL LESS DISCOUNT",
       formatCurrencyForPdf(invoice.subtotalLessDiscount, settings.currency),
     ],
-    ["TAX RATE", `${invoice.taxRatePercent.toFixed(2)}%`],
-    ["TOTAL TAX", formatCurrencyForPdf(invoice.totalTax, settings.currency)],
+    ...(showTax
+      ? [
+          ["TAX RATE", `${invoice.taxRatePercent.toFixed(2)}%`] as [string, string],
+          ["TOTAL TAX", formatCurrencyForPdf(invoice.totalTax, settings.currency)] as [
+            string,
+            string,
+          ],
+        ]
+      : []),
     ["Round", formatCurrencyForPdf(invoice.roundAdjustment, settings.currency)],
   ];
 
@@ -506,7 +521,7 @@ function drawFooter(ctx: DrawContext, invoice: SalesInvoice, startY: number) {
     boldFont,
     primary,
   );
-  page.drawText("Balance Due", {
+  page.drawText("Total Amount", {
     x: totalsLeft,
     y: totalsY - 6,
     size: 10,

@@ -76,6 +76,9 @@ function formToSalesInvoice(
     subtotalLessDiscount: totals.subtotalLessDiscount,
     totalTax: totals.totalTax,
     balanceDue: totals.balanceDue,
+    showShipTo: values.showShipTo,
+    showTax: values.showTax,
+    showGst: values.showGst,
     templateId: "default",
     pdfBlobKey: existing.pdfBlobKey,
     createdAt: existing.createdAt ?? now,
@@ -107,6 +110,9 @@ function salesInvoiceToForm(invoice: SalesInvoice): SalesInvoiceFormValues {
     taxRatePercent: invoice.taxRatePercent,
     autoRound: invoice.roundAdjustment !== 0,
     roundAdjustment: invoice.roundAdjustment,
+    showShipTo: invoice.showShipTo ?? true,
+    showTax: invoice.showTax ?? true,
+    showGst: invoice.showGst ?? true,
   };
 }
 
@@ -137,6 +143,7 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
         taxRatePercent: watched.taxRatePercent,
         autoRound: watched.autoRound,
         roundAdjustment: watched.autoRound ? 0 : watched.roundAdjustment,
+        showTax: watched.showTax,
       }),
     [watched],
   );
@@ -312,6 +319,38 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
 
           <Card>
             <CardHeader>
+              <CardTitle>Display Options</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="show-ship-to">Show Ship To</Label>
+                <Switch
+                  id="show-ship-to"
+                  checked={form.watch("showShipTo")}
+                  onCheckedChange={(v) => form.setValue("showShipTo", v)}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="show-tax">Show Tax</Label>
+                <Switch
+                  id="show-tax"
+                  checked={form.watch("showTax")}
+                  onCheckedChange={(v) => form.setValue("showTax", v)}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="show-gst">Show GST</Label>
+                <Switch
+                  id="show-gst"
+                  checked={form.watch("showGst")}
+                  onCheckedChange={(v) => form.setValue("showGst", v)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Bill To</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -339,20 +378,22 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Ship To</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label>Shipping / Delivery Description</Label>
-                <Input
-                  {...form.register("shipToDescription")}
-                  placeholder="e.g. Online sale"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {form.watch("showShipTo") && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Ship To</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>Shipping / Delivery Description</Label>
+                  <Input
+                    {...form.register("shipToDescription")}
+                    placeholder="e.g. Online sale"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -479,15 +520,17 @@ export function SalesInvoiceEditor({ invoiceId }: SalesInvoiceEditorProps) {
                   {...form.register("discount", { valueAsNumber: true })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Tax Rate (%)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  {...form.register("taxRatePercent", { valueAsNumber: true })}
-                />
-              </div>
+              {form.watch("showTax") && (
+                <div className="space-y-2">
+                  <Label>Tax Rate (%)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    {...form.register("taxRatePercent", { valueAsNumber: true })}
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-2 sm:col-span-2">
                 <Switch
                   checked={form.watch("autoRound")}

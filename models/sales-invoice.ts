@@ -71,6 +71,9 @@ export const salesInvoiceSchema = z.object({
   subtotalLessDiscount: z.number(),
   totalTax: z.number(),
   balanceDue: z.number(),
+  showShipTo: z.boolean(),
+  showTax: z.boolean(),
+  showGst: z.boolean(),
   templateId: salesInvoiceTemplateSchema,
   pdfBlobKey: z.string().optional(),
   createdAt: z.string(),
@@ -79,32 +82,36 @@ export const salesInvoiceSchema = z.object({
 
 export type SalesInvoice = z.infer<typeof salesInvoiceSchema>;
 
-export const salesInvoiceFormSchema = z.object({
-  invoiceNumber: z.string(),
-  invoiceDate: z.string().min(1),
-  paymentStatus: paymentStatusSchema,
-  referenceNumber: z.string(),
-  billToName: z.string().min(1, "Customer name is required"),
-  billToPhone: z.string(),
-  billToAddress: z.string(),
-  billToEmail: z.string(),
-  shipToDescription: z.string(),
-  lineItems: z.array(
-    z.object({
-      id: z.string(),
-      description: z.string(),
-      qty: z.number().min(0),
-      unitPrice: z.number().min(0),
-    }),
-  ).min(1),
-  paymentMode: paymentModeSchema,
-  upiTransactionId: z.string(),
-  remarks: z.string(),
-  discount: z.number().min(0),
-  taxRatePercent: z.number().min(0),
-  autoRound: z.boolean(),
-  roundAdjustment: z.number(),
-});
+export const salesInvoiceFormSchema = z
+  .object({
+    invoiceNumber: z.string(),
+    invoiceDate: z.string().min(1),
+    paymentStatus: paymentStatusSchema,
+    referenceNumber: z.string(),
+    billToName: z.string().min(1, "Customer name is required"),
+    billToPhone: z.string(),
+    billToAddress: z.string(),
+    billToEmail: z.string(),
+    shipToDescription: z.string(),
+    lineItems: z.array(
+      z.object({
+        id: z.string(),
+        description: z.string(),
+        qty: z.number().min(0),
+        unitPrice: z.number().min(0),
+      }),
+    ).min(1),
+    paymentMode: paymentModeSchema,
+    upiTransactionId: z.string(),
+    remarks: z.string(),
+    discount: z.number().min(0),
+    taxRatePercent: z.number().min(0),
+    autoRound: z.boolean(),
+    roundAdjustment: z.number(),
+    showShipTo: z.boolean(),
+    showTax: z.boolean(),
+    showGst: z.boolean(),
+  });
 
 export type SalesInvoiceFormValues = z.infer<typeof salesInvoiceFormSchema>;
 
@@ -134,4 +141,7 @@ export const DEFAULT_SALES_INVOICE_FORM: SalesInvoiceFormValues = {
   taxRatePercent: 18,
   autoRound: true,
   roundAdjustment: 0,
+  showShipTo: true,
+  showTax: true,
+  showGst: true,
 };
